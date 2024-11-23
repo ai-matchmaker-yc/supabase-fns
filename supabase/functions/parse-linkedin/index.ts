@@ -1,10 +1,17 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { encodeUrl } from "https://deno.land/x/encodeurl/mod.ts";
+import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 Deno.serve(async (req) => {
   const body = await req.json()
   const profileUrl = body.profileUrl
   const userId = body.userId
+
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+    { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+  )
 
   console.log(profileUrl)
 
@@ -39,9 +46,13 @@ Deno.serve(async (req) => {
   const embeddingData = await voyageResponse.json()
   console.log(embeddingData)
 
-  const { data: profileData, error: profileError } = await supabase.from("profiles")
-    .update({ embedding: embeddingData.data[0].embedding })
-    .eq('id', userId);
+  const { data: profileData, error: profileError } = await supabase
+    .from('profiles')
+    .update({
+      linkedin_data: data,
+      linkedin_embedding: embeddingData.data[0].embedding
+    })
+    .eq('id', userId)
 
   console.log(profileData)
   console.log(profileError)
