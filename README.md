@@ -2,7 +2,7 @@
 
 ## functions
 
-### parse-linkedin
+### ⚡️ parse-linkedin
 ```
 Input
 -----
@@ -24,7 +24,7 @@ Uses VoyageAI to create an embedding from the given LinkedIn profile, based on:
 
 ...then stores this data in the `profiles` table (`linkedin_data: jsonb`, `linkedin_embedding: vector`).
 
-### match
+### ⚡️ match
 ```
 Input
 -----
