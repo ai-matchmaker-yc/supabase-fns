@@ -4,17 +4,37 @@
 
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+import Anthropic from '@anthropic-ai/sdk';
 
 console.log("Hello from Functions!")
 
 Deno.serve(async (req) => {
-  const { name } = await req.json()
-  const data = {
-    message: `Hello ${name}!`,
-  }
+  const { userId, conferenceId, matchLimit } = await req.json()
+
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+    { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+  )
+
+  const anthropic = new Anthropic({
+    apiKey: Deno.env.get('ANTHROPIC_API_KEY')
+  });
+
+  // call RPC function
+  const { data: matchData, error: matchError } = await supabase
+    .rpc('find_similar_profiles', {
+      'match_limit': matchLimit,
+      'target_conference_id': conferenceId,
+      'user_id': userId,
+    })
+  if (matchError) console.error(matchError)
+  else console.log(matchData)
+
+  // TODO: call claude to make sense of the results
 
   return new Response(
-    JSON.stringify(data),
+    JSON.stringify({ hello: 'world' }),
     { headers: { "Content-Type": "application/json" } },
   )
 })

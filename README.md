@@ -31,6 +31,7 @@ Input
 {
     userId: UUID,
     conferenceId: int,
+    matchLimit: int // optional, defaults to 5
 }
 
 Output
@@ -44,8 +45,8 @@ Output
 }
 ```
 
-Uses vector similary search (cosine distance) to find matches for a target user, within a target conference.
+Calls RPC function `find_similar_profiles`, which uses a cosine distance vector similary search to find matches for a target user within a target conference.
 
 After finding matches, uses Claude to come up with some icebreakers and "descriptions" on why the profiles are a good match.
 
-Matches found are stored in the `matches` table.
+Returns up to `matchLimit` matches. Results are stored in the `matches` table.
