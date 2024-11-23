@@ -5,6 +5,12 @@ Deno.serve(async (req) => {
   const body = await req.json();
   const profileUrl = body.profileUrl;
 
+  if (!profileUrl) {
+    return new Response("Missing profileUrl", {
+      status: 400,
+    });
+  }
+
   console.log(profileUrl);
 
   const options = { method: "GET" };
@@ -14,6 +20,15 @@ Deno.serve(async (req) => {
     )}&linkedInUrl=${encodeUrl(profileUrl)}`,
     options
   );
+
+  if (!scrapinResponse.ok) {
+    const data = await scrapinResponse.json();
+    console.log("Failed to fetch LinkedIn profile", data, scrapinResponse.status, scrapinResponse.statusText);
+    return new Response("Failed to fetch LinkedIn profile", {
+      status: 500,
+    });
+  }
+
   const data = await scrapinResponse.json();
 
   console.log(data);
