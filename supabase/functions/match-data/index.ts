@@ -77,15 +77,14 @@ Deno.serve(async (req) => {
 	const matchReasoning = JSON.parse(msg.content[0].text);
 	console.log(matchReasoning);
 
-	const { data: insertMatchData, error: insertMatchError } = await supabase
-		.from("matches")
-		.insert({
-			profile_id_1: userId,
-			profile_id_2: matchUserId,
-			conference_id: conferenceId,
-			icebreakers: matchReasoning.icebreakers,
-			match_reason: matchReasoning.match_reasons,
-		});
+  const { data: insertMatchData, error: insertMatchError } = await supabase.from('matches')
+    .insert({
+      source_user_id: userId,
+      match_user_id: matchUserId,
+      conference_id: conferenceId,
+      icebreakers: matchReasoning.icebreakers,
+      match_reason: matchReasoning.match_reason
+    })
 
 	console.log(insertMatchData);
 	console.log(insertMatchError);
