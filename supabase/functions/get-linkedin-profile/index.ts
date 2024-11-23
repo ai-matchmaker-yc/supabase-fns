@@ -1,7 +1,12 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { encodeUrl } from "https://deno.land/x/encodeurl/mod.ts";
+import { corsHeaders } from "../_shared/cors";
 
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   const body = await req.json();
   const profileUrl = body.profileUrl;
 
