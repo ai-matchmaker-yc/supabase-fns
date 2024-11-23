@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import Anthropic from "npm:@anthropic-ai/sdk";
+import { corsHeaders } from "../_shared/cors.ts";
 
 const getLinkedinDocument = async (supabase, profileId: str) => {
   const { data, error } = await supabase
@@ -12,6 +13,10 @@ const getLinkedinDocument = async (supabase, profileId: str) => {
 };
 
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   const { matchId } = await req.json();
 
   console.log(matchId)
@@ -103,6 +108,6 @@ Deno.serve(async (req) => {
   console.log(updateMatchError);
 
   return new Response(JSON.stringify(matchReasoning), {
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...corsHeaders },
   });
 });
