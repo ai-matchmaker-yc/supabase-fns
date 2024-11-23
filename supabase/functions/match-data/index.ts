@@ -80,11 +80,11 @@ Deno.serve(async (req) => {
 	const { data: insertMatchData, error: insertMatchError } = await supabase
 		.from("matches")
 		.insert({
-			profile_id_1: userId,
-			profile_id_2: matchUserId,
+			source_user_id: userId,
+			match_user_id: matchUserId,
 			conference_id: conferenceId,
 			icebreakers: matchReasoning.icebreakers,
-			match_reasons: matchReasoning.match_reasons,
+			match_reasons: matchReasoning.match_reason,
 		});
 
 	console.log(insertMatchData);
