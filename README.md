@@ -5,12 +5,14 @@
 ### parse-linkedin
 ```
 Input
+-----
 {
     userId: UUID,
     profileUrl: str, // linkedin profile URL
 }
 
-Output:
+Output
+------
 {}
 ```
 Uses VoyageAI to create an embedding from the given LinkedIn profile, based on:
@@ -25,12 +27,14 @@ Uses VoyageAI to create an embedding from the given LinkedIn profile, based on:
 ### match
 ```
 Input
+-----
 {
     userId: UUID,
     conferenceId: int,
 }
 
 Output
+------
 {
     matches: [{
         userId: UUID,
@@ -44,4 +48,4 @@ Uses vector similary search (cosine distance) to find matches for a target user,
 
 After finding matches, uses Claude to come up with some icebreakers and "descriptions" on why the profiles are a good match.
 
-Found are stored in the `matches` table.
+Matches found are stored in the `matches` table.
