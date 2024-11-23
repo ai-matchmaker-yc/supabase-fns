@@ -20,6 +20,15 @@ Deno.serve(async (req) => {
       'user_id': userId,
     })
 
+  await Promise.all(
+    matchData.map(match => supabase.from('matches').insert({
+      source_user_id: userId,
+      match_user_id: match.id,
+      conference_id: conferenceId,
+      compatibility: match.similarity_score
+    }))
+  )
+
   console.log(matchData)
   console.log(matchError)
 

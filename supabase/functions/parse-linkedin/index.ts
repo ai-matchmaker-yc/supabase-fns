@@ -3,9 +3,11 @@ import { encodeUrl } from "https://deno.land/x/encodeurl/mod.ts";
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 Deno.serve(async (req) => {
-  const { profileUrl, userId } = await req.json()
-  // const profileUrl = body.profileUrl
-  // const userId = body.userId
+  const {
+    linkedinProfileUrl,
+    githubProfileUrl,
+    userId
+  } = await req.json()
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
@@ -13,10 +15,10 @@ Deno.serve(async (req) => {
     { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
   )
 
-  console.log(profileUrl)
+  console.log(linkedinProfileUrl)
 
   const options = { method: 'GET' }
-  const scrapinResponse = await fetch(`https://api.scrapin.io/enrichment/profile?apikey=${Deno.env.get('SCRAPIN_API_KEY')}&linkedInUrl=${encodeUrl(profileUrl)}`, options)
+  const scrapinResponse = await fetch(`https://api.scrapin.io/enrichment/profile?apikey=${Deno.env.get('SCRAPIN_API_KEY')}&linkedInUrl=${encodeUrl(linkedinProfileUrl)}`, options)
   const data = await scrapinResponse.json()
 
   console.log(data)
@@ -51,7 +53,9 @@ Deno.serve(async (req) => {
     .update({
       first_name: data.person.firstName,
       last_name: data.person.lastName,
-      linkedin_url: profileUrl,
+      photo_url: data.person.photoUrl,
+      github_url: githubProfileUrl,
+      linkedin_url: linkedinProfileUrl,
       linkedin_data: data,
       linkedin_document: coreDataStr,
       linkedin_embedding: embeddingData.data[0].embedding
@@ -61,7 +65,11 @@ Deno.serve(async (req) => {
   console.log(profileData)
   console.log(profileError)
 
-  return new Response(JSON.stringify({ coreDataStr: coreDataStr }), {
-    headers: { 'Content-Type': 'application/json' },
+  return new Response(JSON.stringify({
+    firstName: data.person.firstName,
+    lastName: data.person.lastName,
+    photoUrl: data.person.photoUrl,
+  }), {
+    headers: { 'Content-Type': 'application/json', ...corsHeaders },
   })
 })
