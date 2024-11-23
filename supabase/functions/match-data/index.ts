@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
 			profile_id_2: matchUserId,
 			conference_id: conferenceId,
 			icebreakers: matchReasoning.icebreakers,
-			match_reason: matchReasoning.match_reasons,
+			match_reasons: matchReasoning.match_reasons,
 		});
 
 	console.log(insertMatchData);
