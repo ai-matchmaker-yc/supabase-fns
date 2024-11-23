@@ -39,14 +39,32 @@ Output
 {
     matches: [{
         userId: UUID,
-        reasons: [str],
-        icebreakers: [str],
+        similarity_score: float, // range 0-1, higher means more similar
     }],
 }
 ```
 
 Calls RPC function `find_similar_profiles`, which uses a cosine distance vector similary search to find matches for a target user within a target conference.
 
-After finding matches, uses Claude to come up with some icebreakers and "descriptions" on why the profiles are a good match.
+Returns up to `matchLimit` matches. Output is sorted by `similarity_score`, descending.
 
-Returns up to `matchLimit` matches. Results are stored in the `matches` table.
+### ⚡️ match-data
+```
+Input
+-----
+{
+    userId: UUID,
+    matchUserId: UUID,
+    conferenceId: int,
+}
+
+Output
+------
+{
+    match_reason: "You both have entrepreneurial experience and have recently launched...",
+    icebreakers: [
+        "I noticed we're both NCSU alum...",
+        "How's life after launching? I also..."
+    ]
+}
+```

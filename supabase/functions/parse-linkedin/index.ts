@@ -50,6 +50,7 @@ Deno.serve(async (req) => {
     .from('profiles')
     .update({
       linkedin_data: data,
+      linkedin_document: coreDataStr,
       linkedin_embedding: embeddingData.data[0].embedding
     })
     .eq('id', userId)
