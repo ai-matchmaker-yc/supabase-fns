@@ -92,15 +92,15 @@ Deno.serve(async (req) => {
   const matchReasoning = JSON.parse(msg.content[0].text);
   console.log(matchReasoning);
 
-  const { data: insertMatchData, error: insertMatchError } = await supabase.from('matches')
+  const { data: updateMatchData, error: updateMatchError } = await supabase.from('matches')
     .update({
       icebreakers: matchReasoning.icebreakers,
       match_reasons: matchReasoning.match_reasons
     })
     .eq('id', matchId)
 
-  console.log(insertMatchData);
-  console.log(insertMatchError);
+  console.log(updateMatchData);
+  console.log(updateMatchError);
 
   return new Response(JSON.stringify(matchReasoning), {
     headers: { "Content-Type": "application/json" },

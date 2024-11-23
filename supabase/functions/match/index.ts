@@ -20,20 +20,32 @@ Deno.serve(async (req) => {
       'user_id': userId,
     })
 
-  await Promise.all(
-    matchData.map(match => supabase.from('matches').insert({
+  console.log(matchData)
+  console.log(matchError)
+
+  const { data: insertMatchData, error: insertMatchError } = await supabase.from('matches').insert(matchData.map(match => {
+    return {
       source_user_id: userId,
       match_user_id: match.id,
       conference_id: conferenceId,
       compatibility: match.similarity_score
-    }))
-  )
+    }
+  })).select()
 
-  console.log(matchData)
-  console.log(matchError)
+  console.log(insertMatchData)
+  console.log(insertMatchError)
+
+  // const results = await Promise.all(
+  //   matchData.map(match => supabase.from('matches').insert({
+  //     source_user_id: userId,
+  //     match_user_id: match.id,
+  //     conference_id: conferenceId,
+  //     compatibility: match.similarity_score
+  //   }).select())
+  // )
 
   return new Response(
-    JSON.stringify(matchData),
+    JSON.stringify(insertMatchData),
     { headers: { "Content-Type": "application/json" } },
   )
 })
