@@ -1,9 +1,20 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { encodeUrl } from "https://deno.land/x/encodeurl/mod.ts";
+import { corsHeaders } from "../_shared/cors.ts";
 
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   const body = await req.json();
   const profileUrl = body.profileUrl;
+
+  if (!profileUrl) {
+    return new Response("Missing profileUrl", {
+      status: 400,
+    });
+  }
 
   console.log(profileUrl);
 
@@ -14,6 +25,15 @@ Deno.serve(async (req) => {
     )}&linkedInUrl=${encodeUrl(profileUrl)}`,
     options
   );
+
+  if (!scrapinResponse.ok) {
+    const data = await scrapinResponse.json();
+    console.log("Failed to fetch LinkedIn profile", data, scrapinResponse.status, scrapinResponse.statusText);
+    return new Response("Failed to fetch LinkedIn profile", {
+      status: 500,
+    });
+  }
+
   const data = await scrapinResponse.json();
 
   console.log(data);
@@ -29,7 +49,7 @@ Deno.serve(async (req) => {
       photoUrl,
     }),
     {
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     }
   );
 });

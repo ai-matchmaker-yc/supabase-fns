@@ -1,36 +1,54 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-import { createClient } from 'jsr:@supabase/supabase-js@2'
-import Anthropic from 'npm:@anthropic-ai/sdk';
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
+import Anthropic from "npm:@anthropic-ai/sdk";
+import { corsHeaders } from "../_shared/cors.ts";
 
 const getLinkedinDocument = async (supabase, profileId: str) => {
-  const { data, error } = await supabase.from('profiles')
-    .select('linkedin_document')
-    .eq('id', profileId)
-    .single()
-  return data?.linkedin_document
-}
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("linkedin_document")
+    .eq("id", profileId)
+    .single();
+  return data?.linkedin_document;
+};
 
 Deno.serve(async (req) => {
-  const { userId, matchUserId, conferenceId } = await req.json()
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
 
-  console.log(userId, matchUserId)
+  const { matchId } = await req.json();
+
+  console.log(matchId)
 
   const supabase = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-    { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
-  )
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+    {
+      global: { headers: { Authorization: req.headers.get("Authorization")! } },
+    }
+  );
 
-  const [ profileDoc, matchDoc ] = await Promise.all([
-    getLinkedinDocument(supabase, userId),
-    getLinkedinDocument(supabase, matchUserId)
-  ])
+  const { data: match, error: matchError } = await supabase.from('matches')
+    .select('*')
+    .eq('id', matchId)
+    .single()
 
-  console.log(profileDoc)
-  console.log(matchDoc)
-  
+  console.log(match)
+  console.log(matchError)
+
+  console.log(match.source_user_id, match.match_user_id);
+
+  const [profileDoc, matchDoc] = await Promise.all([
+    getLinkedinDocument(supabase, match.source_user_id),
+    getLinkedinDocument(supabase, match.match_user_id),
+  ]);
+
+  console.log(profileDoc);
+  console.log(matchDoc);
+
   const anthropic = new Anthropic({
-    apiKey: Deno.env.get('ANTHROPIC_API_KEY')
+    apiKey: Deno.env.get("ANTHROPIC_API_KEY"),
   });
 
   const msg = await anthropic.messages.create({
@@ -41,9 +59,9 @@ Deno.serve(async (req) => {
         role: "user",
         content: `You are an expert matchmaker, on a mission to help event attendees
         find people with whom to connect. Given the profiles of a target attendee and the
-        profile of another attendee who I have determined to be a match, write a 1-2
-        sentence blurb on why they are a good match, along with 1-2 icebreakers they
-        could use upon meeting.
+        profile of another attendee who I have determined to be a match, write 2-3 super
+        short bullet points on why they should meet the matched person. Additionally,
+        create 2 icebreakers they could use upon meeting.
 
         <target_attendee>
         ${profileDoc}
@@ -57,38 +75,41 @@ Deno.serve(async (req) => {
         Follow this JSON structure for your output:
         <output_structure>
         {
-          "match_reason": "You'll be a good match because you both went to NC State
-            University, and both work in education.",
+          "match_reasons": [
+            "You both work in IT",
+            "Both attended Stanford",
+            "Similar interest in AI/ML",
+            "You're both technical founders who've built developer tools"
+          ]
           "icebreakers": [
             "I see you went to NC State University, too!",
             "Looks like we both work in education - how do you like it?"
           ],
         }
         </output_structure>
-        `
-      }
+        `,
+      },
     ],
   });
 
-  console.log(msg)
+  console.log(msg);
 
-  const matchReasoning = JSON.parse(msg.content[0].text)
-  console.log(matchReasoning)
+  const matchReasoning = JSON.parse(msg.content[0].text);
+  console.log(matchReasoning);
 
-  const { data: insertMatchData, error: insertMatchError } = await supabase.from('matches')
-    .insert({
-      profile_id_1: userId,
-      profile_id_2: matchUserId,
-      conference_id: conferenceId,
+  const { data: updateMatchData, error: updateMatchError } = await supabase.from('matches')
+    .update({
       icebreakers: matchReasoning.icebreakers,
-      match_reason: matchReasoning.match_reason
+      match_reasons: matchReasoning.match_reasons
     })
+    .eq('id', matchId)
+    .select()
+    .single()
 
-  console.log(insertMatchData)
-  console.log(insertMatchError)
+  console.log(updateMatchData);
+  console.log(updateMatchError);
 
-  return new Response(
-    JSON.stringify(matchReasoning),
-    { headers: { "Content-Type": "application/json" } },
-  )
-})
+  return new Response(JSON.stringify(updateMatchData), {
+    headers: { "Content-Type": "application/json", ...corsHeaders },
+  });
+});

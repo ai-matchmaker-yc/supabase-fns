@@ -1,9 +1,14 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { corsHeaders } from "../_shared/cors.ts";
 
 const DEFAULT_MATCH_LIMIT = 5
 
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   const { userId, conferenceId, matchLimit } = await req.json()
 
   const supabase = createClient(
@@ -23,8 +28,29 @@ Deno.serve(async (req) => {
   console.log(matchData)
   console.log(matchError)
 
+  const { data: insertMatchData, error: insertMatchError } = await supabase.from('matches').insert(matchData.map(match => {
+    return {
+      source_user_id: userId,
+      match_user_id: match.id,
+      conference_id: conferenceId,
+      compatibility: match.similarity_score
+    }
+  })).select()
+
+  console.log(insertMatchData)
+  console.log(insertMatchError)
+
+  // const results = await Promise.all(
+  //   matchData.map(match => supabase.from('matches').insert({
+  //     source_user_id: userId,
+  //     match_user_id: match.id,
+  //     conference_id: conferenceId,
+  //     compatibility: match.similarity_score
+  //   }).select())
+  // )
+
   return new Response(
-    JSON.stringify(matchData),
-    { headers: { "Content-Type": "application/json" } },
+    JSON.stringify(insertMatchData),
+    { headers: { "Content-Type": "application/json", ...corsHeaders } },
   )
 })
