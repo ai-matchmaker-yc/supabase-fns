@@ -103,11 +103,13 @@ Deno.serve(async (req) => {
       match_reasons: matchReasoning.match_reasons
     })
     .eq('id', matchId)
+    .select()
+    .single()
 
   console.log(updateMatchData);
   console.log(updateMatchError);
 
-  return new Response(JSON.stringify(matchReasoning), {
+  return new Response(JSON.stringify(updateMatchData), {
     headers: { "Content-Type": "application/json", ...corsHeaders },
   });
 });
