@@ -3,9 +3,9 @@ import { encodeUrl } from "https://deno.land/x/encodeurl/mod.ts";
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 Deno.serve(async (req) => {
-  const body = await req.json()
-  const profileUrl = body.profileUrl
-  const userId = body.userId
+  const { profileUrl, userId } = await req.json()
+  // const profileUrl = body.profileUrl
+  // const userId = body.userId
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
@@ -49,6 +49,9 @@ Deno.serve(async (req) => {
   const { data: profileData, error: profileError } = await supabase
     .from('profiles')
     .update({
+      first_name: data.person.firstName,
+      last_name: data.person.lastName,
+      linkedin_url: profileUrl,
       linkedin_data: data,
       linkedin_document: coreDataStr,
       linkedin_embedding: embeddingData.data[0].embedding
