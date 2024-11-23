@@ -1,6 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { encodeUrl } from "https://deno.land/x/encodeurl/mod.ts";
-import { createClient } from "jsr:@supabase/supabase-js@2";
 
 Deno.serve(async (req) => {
   const body = await req.json();
