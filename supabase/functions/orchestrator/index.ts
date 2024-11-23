@@ -17,6 +17,10 @@ Deno.serve(async (req) => {
     }
   );
 
+  await supabase.from('matches')
+    .delete()
+    .eq('source_user_id', userId)
+
   const { data: matches, error: matchesError } = await supabase.functions.invoke('match', {
     body: { userId: userId, conferenceId: conferenceId, matchLimit: matchLimit }
   })
